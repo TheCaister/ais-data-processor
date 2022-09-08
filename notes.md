@@ -97,3 +97,8 @@ JSON data is written in a similar format. However, property names have to be in 
 
 ## APIs
 - Endpoints - Basically URLs to send requests to
+
+## CORS
+If you want to disable CORS, you can check out this extension:
+
+[Moesif Origin & CORS Changer](https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc)
