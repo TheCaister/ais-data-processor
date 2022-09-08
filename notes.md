@@ -102,3 +102,9 @@ JSON data is written in a similar format. However, property names have to be in 
 If you want to disable CORS, you can check out this extension:
 
 [Moesif Origin & CORS Changer](https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc)
+
+## Features to Potentially Implement
+- Plot AIS data on a map
+- Store AIS data in database
+- Send AIS data off to a Message Queue service like RabbitMQ. Advantages of this include decoupling.
+- Pretend that some of the AIS data is plane data. Create a button to toggle them.
