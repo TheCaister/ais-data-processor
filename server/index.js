@@ -53,3 +53,31 @@ function printAISStream() {
 
 // printAISStream();
 // getToken();
+
+// Promised based AMQP library
+const amqp = require("amqplib");
+
+var msg = 'hi';
+
+connect();
+
+async function connect(){
+    try {
+        // If the return type is a Bluebird, it's Promise based so you have to use the "await" keyword.
+
+        // Must create connection first and then channels
+        // const connection = await amqp.connect("amqp://localhost:5672");
+        const connection = await amqp.connect("amqps://lkxcwyfq:posv1_VqG7KutIoDuUUDmZRKch43Vqll@sparrow.rmq.cloudamqp.com/lkxcwyfq");
+        
+        const channel = await connection.createChannel();
+
+        // Makes sure queue exists. If it doesn't, it will be created.
+        const result = await channel.assertQueue("jobs");
+
+        channel.sendToQueue("jobs", Buffer.from(JSON.stringify(msg)));
+
+        console.log(`Job sent: ${msg.number}`);
+    } catch (error) {
+        console.error(error);
+    }
+}
