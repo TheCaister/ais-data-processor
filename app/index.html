@@ -4,19 +4,27 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>AIS Stream</title>
 </head>
 
 <body>
 
-    <h1>Where is the International Space Station</h1>
+    <!-- Importing Socket.io library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js" integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <p>
-        Latitude: <span id="lat"></span><br>
-        Longitude: <span id="lon"></span>
-    </p>
+    <script>
+        const socket = io();
 
-    <script src="/server/index.js"></script>
+        // Listen for when we connect
+        socket.on('connect', () => {
+            console.log("Connected!");
+        })
+
+        // Listening to the custom made 'ais' event.
+        socket.on('ais', (ais) => {
+            console.log(ais);
+        })
+    </script>
 </body>
 
 </html>
