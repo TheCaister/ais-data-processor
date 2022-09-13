@@ -29,9 +29,14 @@ app.get('/', (req, res) => {
 const url_token = 'https://id.barentswatch.no/connect/token';
 const url_ais = 'https://live.ais.barentswatch.no/v1/ais';
 
+const client_id = '';
+const client_secret = '';
+
+var token = '';
+
 var AISArray = [];
 
-async function getToken() {
+async function getToken(socket) {
     const body = `client_id=${client_id}&client_secret=${client_secret}&scope=ais&grant_type=client_credentials`;
     var request = 'https://id.barentswatch.no/connect/token';
 
@@ -41,14 +46,17 @@ async function getToken() {
             if(err){
                 console.log(err);
             };
-            console.log(res.body);
+            
             data = res.body;
             token = data.access_token;
+            socket.emit('display_token', token.toString());
+            // console.log(token);
         });
 }
 
 // Prints stream of AIS data.
-function printAISStream(socket) {
+async function printAISStream(socket) {
+
     var maxNum = 20;
     var iterator = 0;
 
@@ -68,16 +76,17 @@ function printAISStream(socket) {
                 AISArray.push(json);
                 // console.log(json);
 
-                console.log(`Iterator: ${iterator}`);
+                // console.log(`Iterator: ${iterator}`);
 
                 // Emit an event out from the socket
                 // This is how communication can be done back and forth
                 socket.emit('ais', json);
-                iterator++; 
+                // iterator++; 
+                iterator--;
             }
             else{
                 // Removing listener once the maximum number has been reached.
-                stream.removeAllListeners();
+                // stream.removeAllListeners();
             }
             
             // console.log('Array start: ', AISArray, ': End');
@@ -86,10 +95,21 @@ function printAISStream(socket) {
 }
 
 // When the client connects
-io.on('connection', async () => {
+
+io.on('connection', async (socket) => {
     console.log('Client connected!');
 
-    printAISStream(io);
+    socket.on('token', () => {
+        console.log('Generating token...');
+
+        getToken(socket);
+    })
+
+    socket.on('ais_req', (io) => {
+        console.log('Sending AIS stream...');
+
+        printAISStream(socket);
+    })
 })
 
 // Listening on port on server
