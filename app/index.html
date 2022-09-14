@@ -24,18 +24,38 @@
 
     <style>
         #map {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 500px;
+            height: 600px;
+        }
+
+        .hori {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .verti {
+            display: flex;
+            flex-direction: column;
+            /* justify-content: space-between; */
+        }
+
+        .rcorners {
+            border-radius: 25px;
+        }
+
+        .spacing {
+            margin: 10px;
+            padding: 10px;
+        }
+
+        .scroll {
+            height: 50px;
             width: 500px;
-            z-index: 999;
+            overflow: scroll;
         }
     </style>
 </head>
 
 <body>
-
     <!-- Navbar for aesthetics -->
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
@@ -43,27 +63,42 @@
         </div>
     </nav>
 
-    <!-- Button to generate and display token -->
-    <div>
-        <div>
-            <button id="token-button">Get Token</button>
-            <p id="token">Token:</p>
+    <div class="hori">
+        <div class="verti spacing">
+            <div class="hori spacing">
+                <div>
+                    <h4>INFO</h4>
+                    <p>Welcome to the AIS and plane data viewer. You can toggle between ship and plane data as you please on the map.</p>
+                </div>
+
+
+                <!-- Button to generate and display token -->
+                <div class="verti spacing">
+                    <div>
+                        <button id="token-button" class="btn btn-primary">Get Token</button>
+                        <div class="scroll">
+                            <p id="token">Token:</p>
+                        </div>
+                    </div>
+                    <button id="ais-button" class="btn btn-primary">Starting receiving AIS Stream (Get the token
+                        first!!)</button>
+                </div>
+            </div>
+
+            <!-- Leaflet map -->
+            <div id="map" class="rcorners"></div>
         </div>
-        <button id="ais-button">Starting receiving AIS Stream (Get the token first!!)</button>
+
+        <!-- List of AIS data -->
+        <div class="verti spacing" style="width: 40%;">
+            <div>
+                <h3>AIS DATA</h3>
+            </div>
+            <div id="aisStream"></div>
+        </div>
     </div>
 
-    <!-- Leaflet map -->
-    <div id="map"></div>
-
-    <!-- List of AIS data -->
-    <div class="container">
-        <div id="aisStream"></div>
-    </div>
-
-    <!-- Importing Socket.io library from CDN -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"
-        integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- Importing Socket.io library -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
 
@@ -78,6 +113,22 @@
         // Setting up a layer group for AIS data and a mock layer group for ADS-B data.
         var aisDataList = L.layerGroup();
         var adsbDataList = L.layerGroup();
+
+        // Limits on how much data is displayed.
+        const iconLimit = 50;
+        const dataNum = 3;
+
+
+        // Also making queues of both data types to place a limit on how many can be shown at once.
+
+        // Reference:
+        // put value on end of queue
+        // queue.push(1);
+
+        // Take first value from queue
+        // var value = queue.shift();
+        var aisDataQueue = [];
+        var adsbDataQueue = [];
 
         // Listen for when we connect
         socket.on('connect', () => {
@@ -96,6 +147,8 @@
 
         const tokenButton = document.getElementById('token-button');
         const aisButton = document.getElementById('ais-button');
+
+        console.log(tokenButton);
 
         tokenButton.onclick = () => {
             // Ask the server to generate a token.
@@ -145,19 +198,22 @@
         }).addTo(map);
 
         var planeIcon = L.icon({
-            iconUrl: 'https://image.similarpng.com/very-thumbnail/2021/10/Realistic-plane-isolated-on-transparent-background-PNG.png',
-            iconSize: [24, 18],
-            iconAnchor: [22, 94],
+            iconUrl: 'https://cdn.iconscout.com/icon/free/png-256/plane-2359613-1987480.png',
+
+            iconSize: [20, 20],
+
             // Corresponding point for the popup to the icon
-            popupAnchor: [12, -90]
+            // popupAnchor: [12, -90]
         })
 
         var shipIcon = L.icon({
-            iconUrl: 'https://w7.pngwing.com/pngs/260/825/png-transparent-sailing-ship-caravel-man-of-war-full-rigged-pinnace-sailing-vehicle-transport-dromon.png',
-            iconSize: [24, 18],
-            iconAnchor: [22, 94],
+            iconUrl: 'https://www.nautin.nl/handleidingen/opencpn/lib/Images001.png',
+            // iconUrl: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/1c41afc3-b2f0-4d8c-bdd3-872ebc5d9089/drpy3g-7b7592ca-53ed-4924-8213-360fd13925ec.png/v1/fill/w_146,h_159,strp/going_merry_by_therealmulderman_drpy3g-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTU5IiwicGF0aCI6IlwvZlwvMWM0MWFmYzMtYjJmMC00ZDhjLWJkZDMtODcyZWJjNWQ5MDg5XC9kcnB5M2ctN2I3NTkyY2EtNTNlZC00OTI0LTgyMTMtMzYwZmQxMzkyNWVjLnBuZyIsIndpZHRoIjoiPD0xNDYifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.oqSWC_wRk51Jdbm-zz3qH79EIXt69tFMQdSi7ANJtCs',
+
+            iconSize: [20, 20],
+
             // Corresponding point for the popup to the icon
-            popupAnchor: [12, -90]
+            // popupAnchor: [12, -90]
         })
 
         var marker = null;
@@ -169,97 +225,12 @@
 
         var layerControl = L.control.layers(null, overlays).addTo(map);
 
-
-
-        // Listening to the custom made 'ais' event.
-        socket.on('aiss', (ais) => {
-
-            const dataNum = 10;
-
-            // Setting a limit on how many can be displayed
-            // if (aisStream.childElementCount > dataNum) {
-            //     while (aisStream.firstChild) {
-            //         myNode.removeChild(aisStream.lastChild);
-            //     }
-            // }
-
-            // var marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
-            // marker.setLatLng(ais.latitude, ais.longitude);
-
-            // if (marker !== null) {
-            //     map.removeLayer(marker);
-            // }
-
-            // marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
-
-            // ------------- LAYERS GROUP -------------------
-
-            // Random boolean variable
-            var isPlane = Math.random() < 0.5;
-
-            const iconLimit = 50;
-
-            // Reducing the amount of icons plotted.
-            if (aisDataList.getLayers().length > iconLimit) {
-                aisDataList.clearLayers();
-            }
-
-            if (adsbDataList.getLayers().length > iconLimit) {
-                adsbDataList.clearLayers();
-            }
-
-            // marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
-
-            // Add to different group based on isPlane.
-            if (isPlane) {
-                marker = L.marker([ais.latitude, ais.longitude], { icon: planeIcon });
-                adsbDataList.addLayer(marker);
-            }
-            else {
-                marker = L.marker([ais.latitude, ais.longitude], { icon: shipIcon });
-                aisDataList.addLayer(marker);
-            }
-
-
-            // ------------- LAYERS GROUP -------------------
-
-
-            console.log(ais);
-
-            // Creating a HTML element to display AIS data.
-            const aisElement = document.createElement('div');
-
-            // Two classes. Margin on top and bottom.
-            aisElement.className = 'card my-4';
-
-            aisElement.innerHTML = `
-                <div class="card-body">
-                    <h5 class="card-title">MMSI: ${ais.mmsi}</h5>
-                    <h6 class="card-subtitle" mb-2 text-muted>Type: ${ais.type}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Message Type: ${ais.messageType}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>AIS Class: ${ais.aisClass}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Altitude: ${ais.altitude}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Latitude: ${ais.latitude}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Longitude: ${ais.longitude}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Navigational Status: ${ais.navigationalStatus}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>COG: ${ais.courseOverGround}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>SOG: ${ais.speedOverGround}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>ROT: ${ais.rateOfTurn}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>True Heading: ${ais.trueHeading}</h6>
-                    <h6 class="card-subtitle" mb-2 text-muted>Message Time: ${ais.msgtime}</h6>
-                </div>
-                `;
-
-            aisStream.appendChild(aisElement);
-        });
-
         // Listening to the custom made 'ais' event.
         socket.on('ais', (ais) => {
 
-            const dataNum = 5;
 
             // Setting a limit on how many can be displayed
-            if (aisStream.childElementCount > dataNum) {
+            if (aisStream.childElementCount >= dataNum) {
                 // while (aisStream.firstChild) {
                 //     aisStream.removeChild(aisStream.lastChild);
                 // }
@@ -272,27 +243,34 @@
             // Random boolean variable
             var isPlane = Math.random() < 0.5;
 
-            const iconLimit = 10;
 
             // Reducing the amount of icons plotted.
+            // Important method: removeLayer(<Number> id)
             if (aisDataList.getLayers().length > iconLimit) {
-                aisDataList.clearLayers();
+                // aisDataList.clearLayers();
+                aisDataList.removeLayer(aisDataQueue.shift());
             }
 
             if (adsbDataList.getLayers().length > iconLimit) {
-                adsbDataList.clearLayers();
+                // adsbDataList.clearLayers();
+                adsbDataList.removeLayer(adsbDataQueue.shift());
             }
 
             // marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
 
             // Add to different group based on isPlane.
+            // Important method: getLayerId(<Layer> layer)
+            // Pushes to appropriate queues.
             if (isPlane) {
                 marker = L.marker([ais.latitude, ais.longitude], { icon: planeIcon });
                 adsbDataList.addLayer(marker);
+                adsbDataQueue.push(adsbDataList.getLayerId(marker));
+
             }
             else {
                 marker = L.marker([ais.latitude, ais.longitude], { icon: shipIcon });
                 aisDataList.addLayer(marker);
+                aisDataQueue.push(aisDataList.getLayerId(marker));
             }
 
 
@@ -307,23 +285,26 @@
             // Two classes. Margin on top and bottom.
             aisElement.className = 'card my-4';
 
-            aisElement.innerHTML = `
-    <div class="card-body">
-        <h5 class="card-title">MMSI: ${ais.mmsi}</h5>
-        <h6 class="card-subtitle" mb-2 text-muted>Type: ${ais.type}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Message Type: ${ais.messageType}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>AIS Class: ${ais.aisClass}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Altitude: ${ais.altitude}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Latitude: ${ais.latitude}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Longitude: ${ais.longitude}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Navigational Status: ${ais.navigationalStatus}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>COG: ${ais.courseOverGround}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>SOG: ${ais.speedOverGround}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>ROT: ${ais.rateOfTurn}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>True Heading: ${ais.trueHeading}</h6>
-        <h6 class="card-subtitle" mb-2 text-muted>Message Time: ${ais.msgtime}</h6>
-    </div>
-    `;
+            const HTMLContent = `
+            <div class="card-body">
+                <h5 class="card-title">MMSI: ${ais.mmsi}</h5>
+                <h6 class="card-subtitle" mb-2 text-muted>Type: ${ais.type}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Message Type: ${ais.messageType}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>AIS Class: ${ais.aisClass}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Altitude: ${ais.altitude}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Latitude: ${ais.latitude}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Longitude: ${ais.longitude}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Navigational Status: ${ais.navigationalStatus}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>COG: ${ais.courseOverGround}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>SOG: ${ais.speedOverGround}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>ROT: ${ais.rateOfTurn}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>True Heading: ${ais.trueHeading}</h6>
+                <h6 class="card-subtitle" mb-2 text-muted>Message Time: ${ais.msgtime}</h6>
+            </div>
+            `
+
+            marker.bindPopup(HTMLContent);
+            aisElement.innerHTML = HTMLContent;
 
             aisStream.appendChild(aisElement);
         });

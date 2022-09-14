@@ -107,12 +107,12 @@ If you want to disable CORS, you can check out this extension:
 On the Node server, you would import modules using require. On the HTML side, you would usually import modules from online sources and CDNs. A good site for pulling modules and script tags would be [cdnjs](https://cdnjs.com/). 
 
 ## Features to Potentially Implement
-- Plot AIS data on a map
+- Plot AIS data on a map (DONE!)
 - Store AIS data in database
 - Send AIS data off to a Message Queue service like RabbitMQ. Advantages of this include decoupling.
-- Pretend that some of the AIS data is plane data. Create a button to toggle them.
+- Pretend that some of the AIS data is plane data. Create a button to toggle them. (DONE!)
 
-### Toggling
+### Toggling 
 One way of going about this is by creating two overlays groups, one for ships and one for planes. Add them to the layers control and users should just be able to simply toggle them on and off.
 
 How to determine if data is from a ship or a plane?
