@@ -85,7 +85,7 @@
 
             console.log("Connected!");
 
-            if(connectedOnce){
+            if (connectedOnce) {
                 socket.emit('ais_req');
             }
 
@@ -109,9 +109,12 @@
             socket.emit('ais_req');
         };
 
-        socket.on("disconnect", () => {
-            console.log('Disconnected: ', socket.id); // undefined
-        });
+        // socket.on("disconnect", () => {
+        //     console.log('Disconnected: ', socket.id); // undefined
+        // });
+
+
+
 
         // --------------- SETTING UP BUTTONS -------------------------
 
@@ -169,7 +172,7 @@
 
 
         // Listening to the custom made 'ais' event.
-        socket.on('ais', (ais) => {
+        socket.on('aiss', (ais) => {
 
             const dataNum = 10;
 
@@ -246,6 +249,81 @@
                     <h6 class="card-subtitle" mb-2 text-muted>Message Time: ${ais.msgtime}</h6>
                 </div>
                 `;
+
+            aisStream.appendChild(aisElement);
+        });
+
+        // Listening to the custom made 'ais' event.
+        socket.on('ais', (ais) => {
+
+            const dataNum = 5;
+
+            // Setting a limit on how many can be displayed
+            if (aisStream.childElementCount > dataNum) {
+                // while (aisStream.firstChild) {
+                //     aisStream.removeChild(aisStream.lastChild);
+                // }
+                aisStream.removeChild(aisStream.firstChild);
+
+            }
+
+            // ------------- LAYERS GROUP -------------------
+
+            // Random boolean variable
+            var isPlane = Math.random() < 0.5;
+
+            const iconLimit = 10;
+
+            // Reducing the amount of icons plotted.
+            if (aisDataList.getLayers().length > iconLimit) {
+                aisDataList.clearLayers();
+            }
+
+            if (adsbDataList.getLayers().length > iconLimit) {
+                adsbDataList.clearLayers();
+            }
+
+            // marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
+
+            // Add to different group based on isPlane.
+            if (isPlane) {
+                marker = L.marker([ais.latitude, ais.longitude], { icon: planeIcon });
+                adsbDataList.addLayer(marker);
+            }
+            else {
+                marker = L.marker([ais.latitude, ais.longitude], { icon: shipIcon });
+                aisDataList.addLayer(marker);
+            }
+
+
+            // ------------- LAYERS GROUP -------------------
+
+
+            console.log(ais);
+
+            // Creating a HTML element to display AIS data.
+            const aisElement = document.createElement('div');
+
+            // Two classes. Margin on top and bottom.
+            aisElement.className = 'card my-4';
+
+            aisElement.innerHTML = `
+    <div class="card-body">
+        <h5 class="card-title">MMSI: ${ais.mmsi}</h5>
+        <h6 class="card-subtitle" mb-2 text-muted>Type: ${ais.type}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Message Type: ${ais.messageType}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>AIS Class: ${ais.aisClass}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Altitude: ${ais.altitude}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Latitude: ${ais.latitude}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Longitude: ${ais.longitude}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Navigational Status: ${ais.navigationalStatus}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>COG: ${ais.courseOverGround}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>SOG: ${ais.speedOverGround}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>ROT: ${ais.rateOfTurn}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>True Heading: ${ais.trueHeading}</h6>
+        <h6 class="card-subtitle" mb-2 text-muted>Message Time: ${ais.msgtime}</h6>
+    </div>
+    `;
 
             aisStream.appendChild(aisElement);
         });
