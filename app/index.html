@@ -43,7 +43,7 @@
         </div>
     </nav>
 
-<!-- Button to generate and display token -->
+    <!-- Button to generate and display token -->
     <div>
         <div>
             <button id="token-button">Get Token</button>
@@ -67,6 +67,9 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
 
+        // Will flip to true as soon as the first connection is established.
+        var connectedOnce = false;
+
         // This is the element that will display AIS data in blocks on the web page.
         const aisStream = document.getElementById('aisStream');
 
@@ -78,7 +81,15 @@
 
         // Listen for when we connect
         socket.on('connect', () => {
+
+
             console.log("Connected!");
+
+            if(connectedOnce){
+                socket.emit('ais_req');
+            }
+
+            connectedOnce = true;
         })
 
         // --------------- SETTING UP BUTTONS -------------------------
@@ -130,26 +141,27 @@
             crossOrigin: true
         }).addTo(map);
 
-        var leafletIcon = L.icon({
-            iconUrl: 'https://i.guim.co.uk/img/media/bbf7d90b772c860b9e01afc84f5d7813d0fb5118/3_0_5899_3543/master/5899.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=e1568ba66a6d77884cafde740cd6e7ee',
-            shadowUrl: 'https://i.guim.co.uk/img/media/bbf7d90b772c860b9e01afc84f5d7813d0fb5118/3_0_5899_3543/master/5899.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=e1568ba66a6d77884cafde740cd6e7ee',
+        var planeIcon = L.icon({
+            iconUrl: 'https://image.similarpng.com/very-thumbnail/2021/10/Realistic-plane-isolated-on-transparent-background-PNG.png',
             iconSize: [24, 18],
-            shadowSize: [4, 4],
             iconAnchor: [22, 94],
-            shadowAnchor: [4, 62],
+            // Corresponding point for the popup to the icon
+            popupAnchor: [12, -90]
+        })
+
+        var shipIcon = L.icon({
+            iconUrl: 'https://w7.pngwing.com/pngs/260/825/png-transparent-sailing-ship-caravel-man-of-war-full-rigged-pinnace-sailing-vehicle-transport-dromon.png',
+            iconSize: [24, 18],
+            iconAnchor: [22, 94],
             // Corresponding point for the popup to the icon
             popupAnchor: [12, -90]
         })
 
         var marker = null;
 
-        socket.on('test', () => {
-            console.log('Detected test event');
-        })
-
-
         var overlays = {
-            "Ships": aisDataList
+            "Ships": aisDataList,
+            "Planes": adsbDataList
         };
 
         var layerControl = L.control.layers(null, overlays).addTo(map);
@@ -194,15 +206,17 @@
             }
 
             // marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon }).addTo(map);
-            marker = L.marker([ais.latitude, ais.longitude], { icon: leafletIcon });
 
             // Add to different group based on isPlane.
-            if(isPlane){
+            if (isPlane) {
+                marker = L.marker([ais.latitude, ais.longitude], { icon: planeIcon });
                 adsbDataList.addLayer(marker);
             }
-            else{
+            else {
+                marker = L.marker([ais.latitude, ais.longitude], { icon: shipIcon });
                 aisDataList.addLayer(marker);
             }
+
 
             // ------------- LAYERS GROUP -------------------
 
@@ -235,8 +249,6 @@
 
             aisStream.appendChild(aisElement);
         });
-
-
 
     </script>
 </body>

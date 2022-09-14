@@ -29,8 +29,6 @@ app.get('/', (req, res) => {
 const url_token = 'https://id.barentswatch.no/connect/token';
 const url_ais = 'https://live.ais.barentswatch.no/v1/ais';
 
-const client_id = '';
-const client_secret = '';
 
 var token = '';
 
