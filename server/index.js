@@ -30,6 +30,7 @@ const url_token = 'https://id.barentswatch.no/connect/token';
 const url_ais = 'https://live.ais.barentswatch.no/v1/ais';
 
 
+
 var token = '';
 
 var AISArray = [];

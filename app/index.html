@@ -51,6 +51,7 @@
             height: 50px;
             width: 500px;
             overflow: scroll;
+            margin: 10px;
         }
     </style>
 </head>
@@ -68,20 +69,24 @@
             <div class="hori spacing">
                 <div>
                     <h4>INFO</h4>
-                    <p>Welcome to the AIS and plane data viewer. You can toggle between ship and plane data as you please on the map.</p>
+                    <p>Welcome to the AIS and plane data viewer. You can toggle between ship and "plane" data as you please on the map.</p>
+                    <ol>
+                        <li>Click the "Get Token" button to get your custom token.</li>
+                        <li>Click the "Start receiving AIS Stream"</li>
+                        <li>Go to the map and on the top-right hand corner, you should see options for toggling the visibility of ships and "planes".</li>
+                    </ol>
                 </div>
 
 
                 <!-- Button to generate and display token -->
-                <div class="verti spacing">
+                <div class="verti spacing" style="justify-content: space-around;">
                     <div>
                         <button id="token-button" class="btn btn-primary">Get Token</button>
                         <div class="scroll">
                             <p id="token">Token:</p>
                         </div>
                     </div>
-                    <button id="ais-button" class="btn btn-primary">Starting receiving AIS Stream (Get the token
-                        first!!)</button>
+                    <button id="ais-button" class="btn btn-primary">Start receiving AIS Stream</button>
                 </div>
             </div>
 
@@ -187,7 +192,7 @@
         // --------------- DISPLAYING TOKEN ---------------------------
 
         // Set view with latitude and longitude
-        var map = L.map('map').setView([0, 0], 1);
+        var map = L.map('map').setView([65, 8], 4);
 
         // Add tile layer
         // Using raster tiles in this case.

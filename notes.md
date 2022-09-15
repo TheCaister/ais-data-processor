@@ -109,7 +109,7 @@ On the Node server, you would import modules using require. On the HTML side, yo
 ## Features to Potentially Implement
 - Plot AIS data on a map (DONE!)
 - Store AIS data in database
-- Send AIS data off to a Message Queue service like RabbitMQ. Advantages of this include decoupling.
+- Send AIS data off to a Message Queue service like RabbitMQ. Advantages of this include decoupling. Maybe have the server forward AIS data to the queue and have the client pull from it on the other side.
 - Pretend that some of the AIS data is plane data. Create a button to toggle them. (DONE!)
 
 ### Toggling 
