@@ -123,35 +123,46 @@ console.log("This is the end of the program");
 
 ///////////////////////////////// RabbitMQ //////////////////////////////////////
 
-// // Promised based AMQP library
-// const amqp = require("amqplib");
+// Promised based AMQP library
+const amqp = require("amqplib");
 
-// var msg = 'hi';
+connect();
 
-// connect();
+/**
+ * Connects to Message Queue and sends a message.
+ */
+async function connectToMQ(data, isAIS){
+    try {
+        var result;
 
-// /**
-//  * Connects to Message Queue and sends a message.
-//  */
-// async function connectToMQ(){
-//     try {
-//         // If the return type is a Bluebird, it's Promise based so you have to use the "await" keyword.
+        // If the return type is a Bluebird, it's Promise based so you have to use the "await" keyword.
 
-//         // Must create connection first and then channels
-//         // const connection = await amqp.connect("amqp://localhost:5672");
-//         const connection = await amqp.connect("amqps://lkxcwyfq:posv1_VqG7KutIoDuUUDmZRKch43Vqll@sparrow.rmq.cloudamqp.com/lkxcwyfq");
+        // Must create connection first and then channels
+        // const connection = await amqp.connect("amqp://localhost:5672");
+        const connection = await amqp.connect("amqps://lkxcwyfq:posv1_VqG7KutIoDuUUDmZRKch43Vqll@sparrow.rmq.cloudamqp.com/lkxcwyfq");
         
-//         const channel = await connection.createChannel();
+        const channel = await connection.createChannel();
 
-//         // Makes sure queue exists. If it doesn't, it will be created.
-//         const result = await channel.assertQueue("jobs");
+        // Makes sure queue exists. If it doesn't, it will be created.
+        if(isAIS){
+            result = await channel.assertQueue("ais");
+        }
+        else{
+            result = await channel.assertQueue("adbs");
+        }
 
-//         channel.sendToQueue("jobs", Buffer.from(JSON.stringify(msg)));
+        // Send to appropriate queue
+        if(isAIS){
+            channel.sendToQueue("ais", Buffer.from(JSON.stringify(data)));
+        }
+        else{
+            channel.sendToQueue("adbs", Buffer.from(JSON.stringify(data)));
+        }
 
-//         console.log(`Job sent: ${msg.number}`);
-//     } catch (error) {
-//         console.error(error);
-//     }
-// }
+        console.log(`Job sent: ${data}`);
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 ///////////////////////////////// RabbitMQ //////////////////////////////////////
