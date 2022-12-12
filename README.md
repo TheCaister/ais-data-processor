@@ -7,6 +7,8 @@ Before running the server, you must assign values to the `client_id` and `client
 
 After that, you can run the server through the `npm start` command (`npm run dev` for nodemon). This starts the Node server that will serve the web pages and handle HTTP requests to the AIS provider.
 
+Also, you might have to comment out the RabbitMQ part in index.js. I was experimenting with ways on how to implement message queues into this project.
+
 ### 2. Client
 Once the server is running and ready to serve, go to a browser and type down `localhost:3000` or whatever port is assigned to "PORT". From there, the web page will give you instructions on how to generate the token, send the AIS stream request and view the data on the Leaflet map.
 
